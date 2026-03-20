@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>M3M Finance — Task Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:          #F2F1EE;
+    --surface:     #FFFFFF;
+    --surface2:    #F8F7F4;
+    --border:      #E4E1DA;
+    --charcoal:    #1C1C1E;
+    --charcoal2:   #2C2C2E;
+    --gold:        #B8933F;
+    --gold-light:  #C9A84C;
+    --gold-bg:     #F9F3E8;
+    --gold-border: #E8D5A3;
+    --green:       #1A7A52;
+    --green-bg:    #EAF5EE;
+    --green-bd:    #B2D9C4;
+    --amber:       #A05C00;
+    --amber-bg:    #FEF3E0;
+    --amber-bd:    #F0C87A;
+    --red:         #B91C1C;
+    --red-bg:      #FEF2F2;
+    --red-bd:      #FBBFBF;
+    --text:        #1C1C1E;
+    --text2:       #6B6860;
+    --text3:       #A09C94;
+    --radius:      16px;
+    --radius-sm:   10px;
+    --shadow:      0 1px 8px rgba(0,0,0,0.06);
+    --shadow-md:   0 4px 20px rgba(0,0,0,0.10);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: #111110;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; overflow: hidden;
+  }
+
+  /* ── PHONE SHELL ── */
+  .phone-shell {
+    width: 100vw; height: 100vh;
+    max-width: 430px; max-height: 932px;
+    background: var(--bg);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  @media (min-width: 500px) {
+    .phone-shell {
+      border-radius: 48px;
+      box-shadow: 0 0 0 10px #0e0e0d, 0 0 0 12px #2a2926, 0 50px 100px rgba(0,0,0,0.7);
+    }
+  }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    height: 44px; background: var(--charcoal);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 22px; flex-shrink: 0;
+  }
+  .status-time { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+  .status-right { display: flex; gap: 6px; align-items: center; }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: absolute; inset: 0; top: 44px; bottom: 68px;
+    overflow-y: auto; overflow-x: hidden; background: var(--bg);
+    transition: transform 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.32s ease;
+  }
+  .screen.hidden     { transform: translateX(100%); opacity: 0; pointer-events: none; }
+  .screen.slide-left { transform: translateX(-50px); opacity: 0; pointer-events: none; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    height: 68px; background: var(--charcoal);
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 0 4px; flex-shrink: 0; z-index: 100;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 6px 14px; border-radius: 10px; cursor: pointer;
+    transition: all 0.2s; flex: 1; border: none; background: none;
+  }
+  .nav-item svg { width: 22px; height: 22px; stroke: #7A7772; fill: none; transition: stroke 0.2s, fill 0.2s; }
+  .nav-item .nav-label { font-size: 10px; font-weight: 600; color: #7A7772; letter-spacing: 0.3px; transition: color 0.2s; text-transform: uppercase; }
+  .nav-item.active svg { stroke: var(--gold-light); }
+  .nav-item.active .nav-label { color: var(--gold-light); }
+  .nav-fab {
+    width: 50px; height: 50px; border-radius: 14px; cursor: pointer; border: none;
+    background: linear-gradient(145deg, var(--gold-light), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(184,147,63,0.45); transition: transform 0.15s;
+  }
+  .nav-fab:active { transform: scale(0.92); }
+  .nav-fab svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    background: var(--charcoal); padding: 18px 20px 16px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .header-greeting { font-size: 11px; font-weight: 600; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .header-name { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+  .header-back { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .header-back-btn { width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; }
+  .header-back-btn svg { width: 18px; height: 18px; stroke: #fff; fill: none; }
+  .header-title { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.2px; }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(145deg, var(--gold-light), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: #fff; letter-spacing: 0.5px;
+  }
+
+  /* ── CONTENT ── */
+  .page-content { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  .card {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-body { padding: 16px; }
+
+  /* ── HERO CARD ── */
+  .hero-card {
+    background: var(--charcoal); border-radius: var(--radius);
+    padding: 20px; position: relative; overflow: hidden; border: none;
+  }
+  .hero-card::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(184,147,63,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-card::after {
+    content: 'M3M'; position: absolute; right: 16px; bottom: -14px;
+    font-size: 72px; font-weight: 900; color: rgba(255,255,255,0.04);
+    letter-spacing: -2px; font-family: 'Montserrat'; pointer-events: none;
+  }
+  .hero-tag { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+  .hero-name { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; letter-spacing: -0.4px; }
+  .hero-sub { font-size: 12px; color: rgba(255,255,255,0.45); font-weight: 500; }
+  .hero-date { position: absolute; top: 20px; right: 20px; background: rgba(184,147,63,0.18); border: 1px solid rgba(184,147,63,0.3); padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 0.3px; }
+
+  /* ── SECTION LABEL ── */
+  .sec-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+  .gold-bar { width: 24px; height: 2px; background: var(--gold); border-radius: 1px; margin-bottom: 10px; }
+
+  /* ── METRIC GRID ── */
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-card {
+    border-radius: var(--radius-sm); padding: 14px; cursor: pointer;
+    transition: transform 0.15s; border: 1px solid transparent;
+  }
+  .metric-card:active { transform: scale(0.96); }
+  .metric-card.gold { background: var(--gold-bg); border-color: var(--gold-border); }
+  .metric-card.green { background: var(--green-bg); border-color: var(--green-bd); }
+  .metric-card.amber { background: var(--amber-bg); border-color: var(--amber-bd); }
+  .metric-card.red { background: var(--red-bg); border-color: var(--red-bd); }
+  .metric-num { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 5px; }
+  .metric-label { font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
+  .metric-card.gold .metric-num  { color: var(--gold); }
+  .metric-card.gold .metric-label { color: var(--amber); opacity: 0.9; }
+  .metric-card.green .metric-num  { color: var(--green); }
+  .metric-card.green .metric-label { color: var(--green); opacity: 0.8; }
+  .metric-card.amber .metric-num  { color: var(--amber); }
+  .metric-card.amber .metric-label { color: var(--amber); opacity: 0.8; }
+  .metric-card.red .metric-num  { color: var(--red); }
+  .metric-card.red .metric-label { color: var(--red); opacity: 0.8; }
+
+  .divider-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 0; border-top: 1px solid var(--border); margin-top: 12px; }
+  .divider-row .label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .divider-row .value { font-size: 15px; font-weight: 800; color: var(--amber); }
+
+  /* ── FILTERS ── */
+  .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+  .filters::-webkit-scrollbar { display: none; }
+  .chip {
+    padding: 7px 16px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+    cursor: pointer; border: 1.5px solid var(--border); background: var(--surface);
+    color: var(--text2); transition: all 0.2s; flex-shrink: 0;
+  }
+  .chip.active { background: var(--charcoal); color: var(--gold); border-color: var(--charcoal); }
+
+  /* ── TASK ITEM ── */
+  .task-item {
+    background: var(--surface); border-radius: var(--radius); padding: 16px;
+    border: 1px solid var(--border); cursor: pointer; transition: all 0.2s;
+    box-shadow: var(--shadow);
+  }
+  .task-item:active { transform: scale(0.98); box-shadow: none; }
+  .task-item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .task-name { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; line-height: 1.35; letter-spacing: -0.1px; }
+
+  .badge {
+    padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+    border: 1px solid transparent;
+  }
+  .badge.ns    { background: var(--surface2); color: var(--text3); border-color: var(--border); }
+  .badge.ip    { background: var(--gold-bg); color: var(--gold); border-color: var(--gold-border); }
+  .badge.done  { background: var(--green-bg); color: var(--green); border-color: var(--green-bd); }
+  .badge.late  { background: var(--red-bg); color: var(--red); border-color: var(--red-bd); }
+
+  .task-meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .tmeta { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); font-weight: 500; }
+  .tmeta svg { width: 12px; height: 12px; stroke: var(--text3); fill: none; flex-shrink: 0; }
+
+  .task-foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .mini-av {
+    width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800; color: #fff; letter-spacing: 0.3px;
+  }
+  .asgn-name { font-size: 12px; color: var(--text2); font-weight: 600; }
+  .arrow-icon { margin-left: auto; }
+  .arrow-icon svg { width: 16px; height: 16px; stroke: var(--text3); fill: none; }
+
+  /* ── DETAIL ── */
+  .detail-hero {
+    background: var(--charcoal); padding: 20px; position: relative; overflow: hidden;
+  }
+  .detail-hero::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(45deg, rgba(184,147,63,0.02) 0px, rgba(184,147,63,0.02) 1px, transparent 1px, transparent 12px);
+    pointer-events: none;
+  }
+  .d-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 12px; line-height: 1.3; letter-spacing: -0.3px; }
+  .d-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .d-badge { padding: 5px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.8); letter-spacing: 0.5px; text-transform: uppercase; }
+  .d-badge.gold-b { background: rgba(184,147,63,0.2); color: var(--gold); border: 1px solid rgba(184,147,63,0.3); }
+
+  .d-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+  .d-value { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  .person-row { display: flex; align-items: center; gap: 10px; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; border: 1px solid var(--border); }
+  .person-row .pname { font-size: 14px; font-weight: 700; color: var(--text); }
+  .person-row .pdept { font-size: 11px; color: var(--text2); font-weight: 500; margin-top: 1px; }
+  .big-av { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; }
+
+  .date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .date-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .date-box.revised { background: var(--amber-bg); border-color: var(--amber-bd); }
+  .date-box .dval { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 4px; }
+  .date-box.revised .dval { color: var(--amber); }
+
+  .doc-row { display: flex; align-items: center; gap: 10px; padding: 11px; background: var(--surface2); border-radius: var(--radius-sm); margin-bottom: 8px; border: 1px solid var(--border); }
+  .doc-ic { width: 36px; height: 36px; border-radius: 9px; background: var(--gold-bg); border: 1px solid var(--gold-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .doc-ic svg { width: 18px; height: 18px; stroke: var(--gold); fill: none; }
+  .doc-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .doc-meta { font-size: 11px; color: var(--text3); font-weight: 500; margin-top: 2px; }
+
+  .hist-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); margin-top: 4px; flex-shrink: 0; }
+  .hist-old { font-size: 11px; color: var(--text3); text-decoration: line-through; }
+  .hist-new { font-size: 13px; font-weight: 700; color: var(--text); }
+  .hist-by  { font-size: 11px; color: var(--text3); font-weight: 500; margin-top: 2px; }
+
+  .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .st-opt {
+    padding: 12px; border-radius: var(--radius-sm); text-align: center;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+    cursor: pointer; border: 1.5px solid var(--border);
+    background: var(--surface2); color: var(--text2); transition: all 0.2s;
+  }
+  .st-opt.sel-ns   { border-color: var(--charcoal); background: var(--charcoal); color: #fff; }
+  .st-opt.sel-ip   { border-color: var(--gold-border); background: var(--gold-bg); color: var(--gold); }
+  .st-opt.sel-done { border-color: var(--green-bd); background: var(--green-bg); color: var(--green); }
+  .st-opt.sel-late { border-color: var(--red-bd); background: var(--red-bg); color: var(--red); }
+
+  /* ── FORM ── */
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .f-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); }
+  .f-input, .f-select, .f-area {
+    width: 100%; padding: 13px 14px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--surface2);
+    font-size: 14px; color: var(--text); font-family: 'Montserrat', sans-serif;
+    font-weight: 500; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  .f-input:focus, .f-select:focus, .f-area:focus {
+    border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,147,63,0.12);
+    background: var(--surface);
+  }
+  .f-area { resize: none; min-height: 78px; }
+
+  .usr-results { background: var(--surface); border: 1.5px solid var(--gold); border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm); overflow: hidden; }
+  .usr-item { padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.12s; border-bottom: 1px solid var(--border); }
+  .usr-item:last-child { border-bottom: none; }
+  .usr-item:active { background: var(--gold-bg); }
+  .usr-uname { font-size: 13px; font-weight: 700; color: var(--text); }
+  .usr-umeta { font-size: 11px; color: var(--text2); font-weight: 500; }
+
+  .sel-user { background: var(--gold-bg); border: 1.5px solid var(--gold-border); border-radius: var(--radius-sm); padding: 12px; display: flex; align-items: center; gap: 10px; }
+  .sel-user .clr { margin-left: auto; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; font-weight: 700; }
+
+  .attach-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius-sm);
+    padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s;
+  }
+  .attach-zone:active { border-color: var(--gold); background: var(--gold-bg); }
+  .attach-zone .az-icon { margin-bottom: 6px; }
+  .attach-zone .az-icon svg { width: 28px; height: 28px; stroke: var(--text3); fill: none; }
+  .attach-zone .az-text { font-size: 13px; color: var(--text2); font-weight: 600; }
+  .attach-zone .az-sub  { font-size: 11px; color: var(--text3); font-weight: 500; margin-top: 3px; }
+
+  .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn-gold {
+    width: 100%; padding: 15px; border-radius: var(--radius-sm);
+    background: linear-gradient(145deg, var(--gold-light), var(--gold));
+    color: #fff; font-size: 13px; font-weight: 800; font-family: 'Montserrat', sans-serif;
+    letter-spacing: 0.8px; text-transform: uppercase; border: none; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(184,147,63,0.35); transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-gold:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(184,147,63,0.2); }
+  .btn-ghost {
+    width: 100%; padding: 13px; border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text2); font-size: 13px; font-weight: 700;
+    font-family: 'Montserrat', sans-serif; letter-spacing: 0.5px; text-transform: uppercase;
+    border: 1.5px solid var(--border); cursor: pointer; transition: background 0.15s;
+  }
+  .btn-ghost:active { background: var(--surface2); }
+
+  /* ── NOTIFICATIONS ── */
+  .notif-item {
+    background: var(--surface); border-radius: var(--radius); padding: 14px;
+    border: 1px solid var(--border); display: flex; gap: 12px; cursor: pointer;
+    transition: all 0.2s; box-shadow: var(--shadow);
+  }
+  .notif-item.unread { border-left: 3px solid var(--gold); }
+  .n-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .n-icon svg { width: 20px; height: 20px; stroke-width: 1.8; fill: none; }
+  .n-icon.assign   { background: var(--gold-bg); }  .n-icon.assign svg   { stroke: var(--gold); }
+  .n-icon.deadline { background: var(--amber-bg); } .n-icon.deadline svg { stroke: var(--amber); }
+  .n-icon.delayed  { background: var(--red-bg); }   .n-icon.delayed svg  { stroke: var(--red); }
+  .n-icon.doc      { background: var(--green-bg); } .n-icon.doc svg      { stroke: var(--green); }
+  .n-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; letter-spacing: -0.1px; }
+  .n-body  { font-size: 12px; color: var(--text2); line-height: 1.45; font-weight: 500; }
+  .n-time  { font-size: 10px; color: var(--text3); font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; margin-top: 5px; }
+  .n-dot   { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex-shrink: 0; margin-top: 4px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(16px);
+    background: var(--charcoal); color: #fff; padding: 12px 22px; border-radius: 12px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+    z-index: 1000; opacity: 0; transition: all 0.28s; pointer-events: none;
+    white-space: nowrap; box-shadow: var(--shadow-md);
+    border-left: 3px solid var(--gold);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── SHEET ── */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.28s; }
+  .overlay.show { opacity: 1; pointer-events: all; }
+  .sheet {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+    width: 100%; max-width: 430px; background: var(--surface);
+    border-radius: 24px 24px 0 0; z-index: 400; padding: 20px 20px 32px;
+    transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+    max-height: 82vh; overflow-y: auto;
+  }
+  .sheet.show { transform: translateX(-50%) translateY(0); }
+  .sheet-handle { width: 36px; height: 3px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+  .sheet-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 16px; letter-spacing: -0.2px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+  .fu { animation: fadeUp 0.38s ease forwards; opacity: 0; }
+  .fu-1 { animation-delay: 0.04s; }
+  .fu-2 { animation-delay: 0.09s; }
+  .fu-3 { animation-delay: 0.14s; }
+  .fu-4 { animation-delay: 0.19s; }
+
+  .notif-badge { background: var(--red); color: #fff; font-size: 9px; font-weight: 800; width: 17px; height: 17px; border-radius: 9px; display: flex; align-items: center; justify-content: center; position: absolute; top: 2px; right: 8px; letter-spacing: 0px; }
+
+  * { scrollbar-width: none; }
+</style>
+</head>
+<body>
+<div class="phone-shell">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="status-time" id="clock">9:41</span>
+    <div class="status-right">
+      <!-- Signal -->
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="6" width="3" height="6" rx="1" fill="rgba(255,255,255,0.4)"/>
+        <rect x="4.5" y="4" width="3" height="8" rx="1" fill="rgba(255,255,255,0.6)"/>
+        <rect x="9" y="2" width="3" height="10" rx="1" fill="rgba(255,255,255,0.85)"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1" fill="#fff"/>
+      </svg>
+      <!-- WiFi -->
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#fff"/>
+        <path d="M8 6.5a4.5 4.5 0 00-3.18 1.32l1.42 1.42a2.5 2.5 0 013.52 0l1.42-1.42A4.5 4.5 0 008 6.5z" fill="rgba(255,255,255,0.8)"/>
+        <path d="M8 3a7.5 7.5 0 00-5.3 2.2l1.42 1.42a5.5 5.5 0 017.76 0l1.42-1.42A7.5 7.5 0 008 3z" fill="rgba(255,255,255,0.5)"/>
+      </svg>
+      <!-- Battery -->
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="rgba(255,255,255,0.4)"/>
+        <rect x="2" y="2" width="16" height="8" rx="2" fill="#fff"/>
+        <path d="M23 4v4a2 2 0 000-4z" fill="rgba(255,255,255,0.4)"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SCREEN: DASHBOARD
+  ════════════════════════════════ -->
+  <div class="screen" id="screen-dashboard">
+    <div class="page-header">
+      <div class="header-row">
+        <div>
+          <div class="header-greeting">Finance · Noida</div>
+          <div class="header-name">Good Morning, Arjun</div>
+        </div>
+        <div class="avatar">AM</div>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <div class="hero-card fu fu-1">
+        <div class="hero-tag">Task Overview · March 2025</div>
+        <div class="hero-name">Finance Dashboard</div>
+        <div class="hero-sub">M3M India Pvt. Ltd.</div>
+        <div class="hero-date" id="today-badge">—</div>
+      </div>
+
+      <!-- Assigned by me -->
+      <div class="card fu fu-2">
+        <div class="card-body">
+          <div class="sec-label">Tasks I Assigned</div>
+          <div class="gold-bar"></div>
+          <div class="metric-grid">
+            <div class="metric-card gold"  onclick="goToTasks()"><div class="metric-num">12</div><div class="metric-label">Total Assigned</div></div>
+            <div class="metric-card green" onclick="goToTasks()"><div class="metric-num">5</div><div class="metric-label">Completed</div></div>
+            <div class="metric-card amber" onclick="goToTasks()"><div class="metric-num">4</div><div class="metric-label">In Progress</div></div>
+            <div class="metric-card red"   onclick="goToTasks()"><div class="metric-num">3</div><div class="metric-label">Delayed</div></div>
+          </div>
+          <div class="divider-row"><span class="label">Revised Tasks</span><span class="value">2</span></div>
+        </div>
+      </div>
+
+      <!-- Assigned to me -->
+      <div class="card fu fu-3">
+        <div class="card-body">
+          <div class="sec-label">Tasks Assigned to Me</div>
+          <div class="gold-bar"></div>
+          <div class="metric-grid">
+            <div class="metric-card gold"  onclick="goToTasks()"><div class="metric-num">8</div><div class="metric-label">Total Received</div></div>
+            <div class="metric-card green" onclick="goToTasks()"><div class="metric-num">3</div><div class="metric-label">Completed</div></div>
+            <div class="metric-card amber" onclick="goToTasks()"><div class="metric-num">4</div><div class="metric-label">In Progress</div></div>
+            <div class="metric-card red"   onclick="goToTasks()"><div class="metric-num">1</div><div class="metric-label">Delayed</div></div>
+          </div>
+          <div class="divider-row"><span class="label">Revised Tasks</span><span class="value">1</span></div>
+        </div>
+      </div>
+
+      <button class="btn-gold fu fu-4" onclick="showScreen('screen-create')">
+        Assign New Task
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SCREEN: TASK LIST
+  ════════════════════════════════ -->
+  <div class="screen hidden" id="screen-tasks">
+    <div class="page-header">
+      <div class="header-back">
+        <div class="header-back-btn" onclick="showScreen('screen-dashboard')">
+          <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="header-title">My Tasks</div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="filters">
+        <div class="chip active" onclick="setChip(this,'all')">All</div>
+        <div class="chip" onclick="setChip(this,'ns')">Not Started</div>
+        <div class="chip" onclick="setChip(this,'ip')">In Progress</div>
+        <div class="chip" onclick="setChip(this,'done')">Completed</div>
+        <div class="chip" onclick="setChip(this,'late')">Delayed</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;" id="task-list">
+
+        <div class="task-item" onclick="openTask(0)">
+          <div class="task-item-top">
+            <div class="task-name">Q4 Budget Reconciliation Report</div>
+            <div class="badge ip">In Progress</div>
+          </div>
+          <div class="task-meta">
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Finance</div>
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Due Mar 28</div>
+          </div>
+          <div class="task-foot">
+            <div class="mini-av" style="background:linear-gradient(145deg,#C9A84C,#8B6914)">PK</div>
+            <div class="asgn-name">Priya Kapoor</div>
+            <div class="arrow-icon"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="task-item" onclick="openTask(1)">
+          <div class="task-item-top">
+            <div class="task-name">Vendor Invoice Verification — March</div>
+            <div class="badge late">Delayed</div>
+          </div>
+          <div class="task-meta">
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Accounts</div>
+            <div class="tmeta" style="color:var(--red);"><svg viewBox="0 0 24 24" stroke-width="2" style="stroke:var(--red)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Due Mar 15</div>
+          </div>
+          <div class="task-foot">
+            <div class="mini-av" style="background:linear-gradient(145deg,#C07800,#7A4C00)">RS</div>
+            <div class="asgn-name">Rahul Sharma</div>
+            <div class="arrow-icon"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="task-item" onclick="openTask(2)">
+          <div class="task-item-top">
+            <div class="task-name">GST Filing — February Returns</div>
+            <div class="badge done">Completed</div>
+          </div>
+          <div class="task-meta">
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tax</div>
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Mar 10</div>
+          </div>
+          <div class="task-foot">
+            <div class="mini-av" style="background:linear-gradient(145deg,#1A7A52,#0D4A30)">NK</div>
+            <div class="asgn-name">Neha Kumar</div>
+            <div class="arrow-icon"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="task-item" onclick="openTask(3)">
+          <div class="task-item-top">
+            <div class="task-name">Payroll Processing — March 2025</div>
+            <div class="badge ns">Not Started</div>
+          </div>
+          <div class="task-meta">
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>HR Finance</div>
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Due Apr 1</div>
+          </div>
+          <div class="task-foot">
+            <div class="mini-av" style="background:linear-gradient(145deg,#5B21B6,#2E1065)">AS</div>
+            <div class="asgn-name">Amit Singh</div>
+            <div class="arrow-icon"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="task-item" onclick="openTask(4)">
+          <div class="task-item-top">
+            <div class="task-name">Audit Documentation — FY25</div>
+            <div class="badge ip">In Progress</div>
+          </div>
+          <div class="task-meta">
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Compliance</div>
+            <div class="tmeta"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Due Apr 15</div>
+          </div>
+          <div class="task-foot">
+            <div class="mini-av" style="background:linear-gradient(145deg,#1A5CDB,#0F2044)">PK</div>
+            <div class="asgn-name">Pooja Khanna</div>
+            <div class="arrow-icon"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SCREEN: TASK DETAIL
+  ════════════════════════════════ -->
+  <div class="screen hidden" id="screen-detail">
+    <div class="page-header">
+      <div class="header-back">
+        <div class="header-back-btn" onclick="goBack()">
+          <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="header-title" id="d-header">Detail</div>
+      </div>
+    </div>
+
+    <div style="padding:16px; display:flex; flex-direction:column; gap:12px;" id="detail-body">
+
+      <div class="detail-hero card">
+        <div class="d-title" id="d-name"></div>
+        <div class="d-badges">
+          <div class="d-badge gold-b" id="d-status-badge"></div>
+          <div class="d-badge" id="d-dept-badge"></div>
+        </div>
+      </div>
+
+      <div class="card"><div class="card-body">
+        <div class="d-label">Assigned To</div>
+        <div class="person-row" id="d-person">
+          <div class="big-av" id="d-av" style="background:linear-gradient(145deg,var(--gold-light),var(--gold));"></div>
+          <div><div class="pname" id="d-pname"></div><div class="pdept" id="d-pdept"></div></div>
+        </div>
+      </div></div>
+
+      <div class="card"><div class="card-body">
+        <div class="d-label" style="margin-bottom:10px;">Schedule</div>
+        <div class="date-grid">
+          <div class="date-box"><div class="d-label">Start Date</div><div class="dval" id="d-start"></div></div>
+          <div class="date-box"><div class="d-label">Target Date</div><div class="dval" id="d-target"></div></div>
+        </div>
+        <div id="d-rev-wrap" style="display:none; margin-top:10px;">
+          <div class="date-box revised"><div class="d-label">Revised Target</div><div class="dval" id="d-revised"></div></div>
+        </div>
+      </div></div>
+
+      <div class="card"><div class="card-body">
+        <div class="d-label">Description</div>
+        <div class="d-value" id="d-desc" style="font-size:13px;color:var(--text2);line-height:1.55;font-weight:500;margin-top:6px;"></div>
+      </div></div>
+
+      <div class="card"><div class="card-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="d-label">Documents</div>
+          <button onclick="openUpload()" style="font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:var(--gold);background:var(--gold-bg);border:1px solid var(--gold-border);padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Montserrat',sans-serif;">Upload</button>
+        </div>
+        <div id="d-docs"></div>
+      </div></div>
+
+      <div class="card" id="d-hist-card"><div class="card-body">
+        <div class="d-label" style="margin-bottom:8px;">Revision History</div>
+        <div id="d-hist"></div>
+      </div></div>
+
+      <div class="card"><div class="card-body">
+        <div class="d-label" style="margin-bottom:10px;">Update Status</div>
+        <div class="status-grid" id="d-status-grid"></div>
+        <button class="btn-gold" style="margin-top:12px;" onclick="saveStatus()">Save Changes</button>
+      </div></div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SCREEN: CREATE TASK
+  ════════════════════════════════ -->
+  <div class="screen hidden" id="screen-create">
+    <div class="page-header">
+      <div class="header-back">
+        <div class="header-back-btn" onclick="goBack()">
+          <svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="header-title">Assign New Task</div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="card"><div class="card-body" style="display:flex;flex-direction:column;gap:16px;">
+
+        <div class="form-group">
+          <label class="f-label">Task Name</label>
+          <input class="f-input" type="text" placeholder="e.g. Q1 Budget Review" id="f-name">
+        </div>
+
+        <div class="form-group">
+          <label class="f-label">Description</label>
+          <textarea class="f-area" placeholder="What needs to be done…" id="f-desc"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="f-label">Assign To</label>
+          <input class="f-input" type="text" placeholder="Search employee name…" id="f-usearch" oninput="searchUser(this.value)" autocomplete="off">
+          <div id="f-results" style="display:none;" class="usr-results"></div>
+          <div id="f-selcard" style="display:none;" class="sel-user">
+            <div class="mini-av" id="f-av" style="width:34px;height:34px;font-size:10px;border-radius:9px;background:linear-gradient(145deg,var(--gold-light),var(--gold));"></div>
+            <div><div style="font-size:13px;font-weight:700;" id="f-sname"></div><div style="font-size:11px;color:var(--text2);font-weight:500;" id="f-sdept"></div></div>
+            <button class="clr" onclick="clearUser()">✕</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="f-label">Department</label>
+          <input class="f-input" type="text" id="f-dept" placeholder="Auto-filled on selection" readonly style="color:var(--text3);">
+        </div>
+
+        <div class="date-row">
+          <div class="form-group">
+            <label class="f-label">Start Date</label>
+            <input class="f-input" type="date" id="f-start">
+          </div>
+          <div class="form-group">
+            <label class="f-label">Target Date</label>
+            <input class="f-input" type="date" id="f-target">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="f-label">Initial Status</label>
+          <select class="f-select" id="f-status">
+            <option value="ns">Not Started</option>
+            <option value="ip">In Progress</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="f-label">Attach Documents</label>
+          <div class="attach-zone" onclick="fakeAttach()">
+            <div class="az-icon">
+              <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66L9.41 17.41a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+            </div>
+            <div class="az-text">Tap to attach files</div>
+            <div class="az-sub" id="az-label">PDF · Excel · Word · Images</div>
+          </div>
+        </div>
+
+        <button class="btn-gold" onclick="submitTask()">Assign Task</button>
+        <button class="btn-ghost" onclick="goBack()">Cancel</button>
+
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SCREEN: NOTIFICATIONS
+  ════════════════════════════════ -->
+  <div class="screen hidden" id="screen-notifications">
+    <div class="page-header">
+      <div class="header-row">
+        <div class="header-name">Notifications</div>
+        <button onclick="markRead()" style="font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:var(--gold);background:var(--gold-bg);border:1px solid var(--gold-border);padding:6px 14px;border-radius:8px;cursor:pointer;font-family:'Montserrat',sans-serif;">Mark All Read</button>
+      </div>
+    </div>
+    <div class="page-content" id="notif-list">
+
+      <div class="notif-item unread">
+        <div class="n-icon assign">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="n-title">New Task Assigned</div>
+          <div class="n-body">Arjun Mehta assigned "Q4 Budget Reconciliation Report"</div>
+          <div class="n-time">2 hours ago · Finance</div>
+        </div>
+        <div class="n-dot"></div>
+      </div>
+
+      <div class="notif-item unread">
+        <div class="n-icon deadline">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="n-title">Deadline Approaching</div>
+          <div class="n-body">"Vendor Invoice Verification" is due in 2 days</div>
+          <div class="n-time">5 hours ago · Accounts</div>
+        </div>
+        <div class="n-dot"></div>
+      </div>
+
+      <div class="notif-item unread">
+        <div class="n-icon delayed">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="n-title">Task Delayed</div>
+          <div class="n-body">"Vendor Invoice Verification" has passed its target date</div>
+          <div class="n-time">Yesterday · Accounts</div>
+        </div>
+        <div class="n-dot"></div>
+      </div>
+
+      <div class="notif-item">
+        <div class="n-icon doc">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66L9.41 17.41a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="n-title">Document Uploaded</div>
+          <div class="n-body">Neha Kumar uploaded a file in "GST Filing"</div>
+          <div class="n-time">Mar 10 · Tax</div>
+        </div>
+      </div>
+
+      <div class="notif-item">
+        <div class="n-icon assign">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="n-title">Task Completed</div>
+          <div class="n-body">Neha Kumar marked "GST Filing — February Returns" as completed</div>
+          <div class="n-time">Mar 10 · Tax</div>
+        </div>
+      </div>
+
+      <div class="notif-item">
+        <div class="n-icon deadline">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="n-title">Target Date Revised</div>
+          <div class="n-body">Rahul Sharma revised deadline for "Vendor Invoice" to Mar 20</div>
+          <div class="n-time">Mar 9 · Accounts</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-item active" id="nav-dashboard" onclick="navTo('dashboard',this)">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="nav-label">Overview</span>
+    </button>
+    <button class="nav-item" id="nav-tasks" onclick="navTo('tasks',this)">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span class="nav-label">Tasks</span>
+    </button>
+    <button class="nav-fab" onclick="showScreen('screen-create')">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="nav-item" id="nav-notifications" onclick="navTo('notifications',this)" style="position:relative;">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="nav-label">Alerts</span>
+      <span class="notif-badge" id="nbadge">3</span>
+    </button>
+    <button class="nav-item" onclick="openProfile()">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="nav-label">Profile</span>
+    </button>
+  </div>
+</div>
+
+<!-- UPLOAD SHEET -->
+<div class="overlay" id="ov-upload" onclick="closeUpload()"></div>
+<div class="sheet" id="sh-upload">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Upload Document</div>
+  <div class="attach-zone" onclick="fakePick()" style="margin-bottom:16px;">
+    <div class="az-icon"><svg viewBox="0 0 24 24" stroke-width="1.8" style="width:30px;height:30px;stroke:var(--text3);fill:none;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+    <div class="az-text">Select a file to upload</div>
+    <div class="az-sub">PDF · Excel · Word · Images</div>
+  </div>
+  <div id="up-preview" style="display:none;" class="doc-row" style="margin-bottom:16px;">
+    <div class="doc-ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+    <div><div class="doc-name" id="up-fname">Document.pdf</div><div class="doc-meta">Ready to upload</div></div>
+  </div>
+  <button class="btn-gold" onclick="confirmUpload()">Upload Document</button>
+  <button class="btn-ghost" style="margin-top:8px;" onclick="closeUpload()">Cancel</button>
+</div>
+
+<!-- PROFILE SHEET -->
+<div class="overlay" id="ov-profile" onclick="closeProfile()"></div>
+<div class="sheet" id="sh-profile">
+  <div class="sheet-handle"></div>
+  <div style="background:var(--charcoal);border-radius:var(--radius);padding:20px;margin-bottom:18px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(184,147,63,0.2) 0%,transparent 70%);pointer-events:none;"></div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="avatar" style="width:52px;height:52px;font-size:16px;border-radius:14px;">AM</div>
+      <div>
+        <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.2px;">Arjun Mehta</div>
+        <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-top:3px;">Finance Manager</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:500;margin-top:2px;">Noida Office</div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0;">
+    <div style="padding:13px 4px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      arjun.mehta@m3m.com
+    </div>
+    <div style="padding:13px 4px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.22 2 2 0 012.1 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      +91 98765 43210
+    </div>
+    <div style="padding:13px 4px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Finance Department
+    </div>
+    <div style="padding:13px 4px;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Employee ID: M3M-2201
+    </div>
+  </div>
+  <button class="btn-ghost" style="margin-top:18px;" onclick="closeProfile()">Close</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // Clock
+  function tick() {
+    const n = new Date();
+    document.getElementById('clock').textContent = `${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('today-badge').textContent = n.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  }
+  tick(); setInterval(tick, 30000);
+
+  // Screen management
+  let cur = 'screen-dashboard', hist = ['screen-dashboard'];
+  function showScreen(id) {
+    const c = document.getElementById(cur), n = document.getElementById(id);
+    c.classList.add('slide-left');
+    n.classList.remove('hidden','slide-left');
+    hist.push(id); cur = id;
+    setTimeout(() => c.classList.add('hidden'), 320);
+  }
+  function goBack() {
+    if (hist.length < 2) return;
+    hist.pop();
+    const prev = hist[hist.length-1];
+    document.getElementById(cur).classList.add('hidden');
+    const p = document.getElementById(prev);
+    p.classList.remove('hidden','slide-left');
+    cur = prev;
+  }
+  function navTo(name, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    const id = 'screen-' + name;
+    if (id === cur) return;
+    document.getElementById(cur).classList.add('hidden');
+    const next = document.getElementById(id);
+    next.classList.remove('hidden','slide-left');
+    cur = id; hist = [id];
+  }
+  function goToTasks() { navTo('tasks', document.getElementById('nav-tasks')); }
+
+  // Task data
+  const tasks = [
+    { name:'Q4 Budget Reconciliation Report', desc:'Complete the reconciliation of Q4 budget vs actuals for all cost centers. Ensure all entries match the ERP system and discrepancies are flagged with supporting notes.', dept:'Finance', status:'ip', assignee:'Priya Kapoor', initials:'PK', adept:'Finance · Noida', avBg:'linear-gradient(145deg,#C9A84C,#8B6914)', start:'Mar 1, 2025', target:'Mar 28, 2025', revised:null, docs:[{name:'Budget_Template.xlsx',by:'Arjun Mehta',size:'124 KB'},{name:'Guidelines_Q4.pdf',by:'Arjun Mehta',size:'890 KB'}], history:[] },
+    { name:'Vendor Invoice Verification — March', desc:'Verify all vendor invoices received in March against POs raised. Flag discrepancies and get sign-off from procurement before processing payment.', dept:'Accounts', status:'late', assignee:'Rahul Sharma', initials:'RS', adept:'Accounts · Gurgaon', avBg:'linear-gradient(145deg,#C07800,#7A4C00)', start:'Mar 1, 2025', target:'Mar 15, 2025', revised:'Mar 22, 2025', docs:[{name:'Invoice_List_Mar.pdf',by:'Rahul Sharma',size:'2.1 MB'}], history:[{old:'Mar 15, 2025',new:'Mar 22, 2025',by:'Rahul Sharma · Mar 16'}] },
+    { name:'GST Filing — February Returns', desc:'Compile and file GST returns for February. Cross-check input tax credit and ensure timely submission before the deadline.', dept:'Tax', status:'done', assignee:'Neha Kumar', initials:'NK', adept:'Tax · Smartworld', avBg:'linear-gradient(145deg,#1A7A52,#0D4A30)', start:'Mar 1, 2025', target:'Mar 20, 2025', revised:null, docs:[{name:'GST_Feb_Return.pdf',by:'Neha Kumar',size:'560 KB'},{name:'ITC_Workings.xlsx',by:'Neha Kumar',size:'220 KB'}], history:[] },
+    { name:'Payroll Processing — March 2025', desc:'Process payroll for March 2025 for all employees including variable pay, deductions, and statutory compliance. Ensure disbursal by month end.', dept:'HR Finance', status:'ns', assignee:'Amit Singh', initials:'AS', adept:'HR Finance · Noida', avBg:'linear-gradient(145deg,#5B21B6,#2E1065)', start:'Mar 25, 2025', target:'Apr 1, 2025', revised:null, docs:[], history:[] },
+    { name:'Audit Documentation — FY25', desc:'Compile all documentation required for the FY2025 statutory audit. Co-ordinate with auditors and ensure all schedules are in order by the agreed deadline.', dept:'Compliance', status:'ip', assignee:'Pooja Khanna', initials:'PK', adept:'Compliance · Gurgaon', avBg:'linear-gradient(145deg,#1A5CDB,#0F2044)', start:'Mar 10, 2025', target:'Apr 15, 2025', revised:null, docs:[{name:'Audit_Checklist_FY25.xlsx',by:'Arjun Mehta',size:'340 KB'}], history:[] }
+  ];
+
+  let curTask = 0, curStatus = '';
+
+  const statusLabel = {ns:'Not Started', ip:'In Progress', done:'Completed', late:'Delayed'};
+  const statusClass = {ns:'sel-ns', ip:'sel-ip', done:'sel-done', late:'sel-late'};
+
+  function openTask(i) {
+    curTask = i; const t = tasks[i];
+    document.getElementById('d-header').textContent = t.dept;
+    document.getElementById('d-name').textContent = t.name;
+    document.getElementById('d-status-badge').textContent = statusLabel[t.status];
+    document.getElementById('d-dept-badge').textContent = t.dept;
+    document.getElementById('d-av').textContent = t.initials;
+    document.getElementById('d-av').style.background = t.avBg;
+    document.getElementById('d-pname').textContent = t.assignee;
+    document.getElementById('d-pdept').textContent = t.adept;
+    document.getElementById('d-start').textContent = t.start;
+    document.getElementById('d-target').textContent = t.target;
+    document.getElementById('d-desc').textContent = t.desc;
+    const rv = document.getElementById('d-rev-wrap');
+    if (t.revised) { rv.style.display='block'; document.getElementById('d-revised').textContent = t.revised; }
+    else rv.style.display = 'none';
+    renderDocs(t);
+    renderHistory(t);
+    curStatus = t.status;
+    const sg = document.getElementById('d-status-grid');
+    sg.innerHTML = ['ns','ip','done','late'].map(s =>
+      `<div class="st-opt ${s===t.status?statusClass[s]:''}" onclick="pickStatus('${s}',this,'${statusClass[s]}')">${statusLabel[s]}</div>`
+    ).join('');
+    showScreen('screen-detail');
+  }
+
+  function renderDocs(t) {
+    const el = document.getElementById('d-docs');
+    if (!t.docs.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px 0;font-weight:500;">No documents attached yet</div>'; return; }
+    el.innerHTML = t.docs.map(d => `
+      <div class="doc-row">
+        <div class="doc-ic"><svg viewBox="0 0 24 24" stroke-width="1.8" style="width:18px;height:18px;stroke:var(--gold);fill:none;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div><div class="doc-name">${d.name}</div><div class="doc-meta">By ${d.by} · ${d.size}</div></div>
+      </div>`).join('');
+  }
+
+  function renderHistory(t) {
+    const hc = document.getElementById('d-hist-card'), he = document.getElementById('d-hist');
+    if (!t.history.length) { hc.style.display='none'; return; }
+    hc.style.display='block';
+    he.innerHTML = t.history.map(h => `
+      <div class="hist-item"><div class="hist-dot"></div>
+      <div><div class="hist-old">${h.old}</div><div class="hist-new">${h.new}</div><div class="hist-by">Revised by ${h.by}</div></div></div>`).join('');
+  }
+
+  function pickStatus(val, el, cls) {
+    curStatus = val;
+    document.querySelectorAll('.st-opt').forEach(o => o.className = 'st-opt');
+    el.classList.add(cls);
+  }
+
+  function saveStatus() { tasks[curTask].status = curStatus; toast('Status updated'); }
+
+  // Filters
+  function setChip(el, f) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    toast('Showing: ' + el.textContent.trim());
+  }
+
+  // User search
+  const users = [
+    {name:'Priya Kapoor',    dept:'Finance',    loc:'Noida',      init:'PK', bg:'linear-gradient(145deg,#C9A84C,#8B6914)'},
+    {name:'Rahul Sharma',    dept:'Accounts',   loc:'Gurgaon',    init:'RS', bg:'linear-gradient(145deg,#C07800,#7A4C00)'},
+    {name:'Neha Kumar',      dept:'Tax',        loc:'Smartworld', init:'NK', bg:'linear-gradient(145deg,#1A7A52,#0D4A30)'},
+    {name:'Amit Singh',      dept:'HR Finance', loc:'Noida',      init:'AS', bg:'linear-gradient(145deg,#5B21B6,#2E1065)'},
+    {name:'Pooja Khanna',    dept:'Compliance', loc:'Gurgaon',    init:'PK', bg:'linear-gradient(145deg,#1A5CDB,#0F2044)'},
+    {name:'Vikram Joshi',    dept:'Finance',    loc:'Noida',      init:'VJ', bg:'linear-gradient(145deg,#B8933F,#6B4F1A)'},
+    {name:'Sunita Rao',      dept:'Accounts',   loc:'Smartworld', init:'SR', bg:'linear-gradient(145deg,#0F7A7A,#054545)'},
+    {name:'Deepak Verma',    dept:'Treasury',   loc:'Gurgaon',    init:'DV', bg:'linear-gradient(145deg,#7A1A7A,#4A0A4A)'},
+  ];
+  let selUser = null;
+
+  function searchUser(v) {
+    const res = document.getElementById('f-results');
+    if (v.length < 1) { res.style.display='none'; return; }
+    const f = users.filter(u => u.name.toLowerCase().includes(v.toLowerCase()));
+    if (!f.length) { res.style.display='none'; return; }
+    res.style.display = 'block';
+    res.innerHTML = f.map(u => `
+      <div class="usr-item" onclick="pickUser('${u.name}','${u.dept}','${u.loc}','${u.init}','${u.bg.replace(/'/g,"\\'")}')">
+        <div class="mini-av" style="width:32px;height:32px;font-size:10px;border-radius:8px;background:${u.bg};">${u.init}</div>
+        <div><div class="usr-uname">${u.name}</div><div class="usr-umeta">${u.dept} · ${u.loc}</div></div>
+      </div>`).join('');
+  }
+
+  function pickUser(name, dept, loc, init, bg) {
+    selUser = {name, dept, loc, init, bg};
+    document.getElementById('f-results').style.display = 'none';
+    document.getElementById('f-usearch').style.display = 'none';
+    const sc = document.getElementById('f-selcard');
+    sc.style.display = 'flex';
+    document.getElementById('f-av').textContent = init;
+    document.getElementById('f-av').style.background = bg;
+    document.getElementById('f-sname').textContent = name;
+    document.getElementById('f-sdept').textContent = dept + ' · ' + loc;
+    document.getElementById('f-dept').value = dept;
+  }
+
+  function clearUser() {
+    selUser = null;
+    document.getElementById('f-usearch').style.display = 'block';
+    document.getElementById('f-usearch').value = '';
+    document.getElementById('f-selcard').style.display = 'none';
+    document.getElementById('f-dept').value = '';
+  }
+
+  let fAttach = 0;
+  function fakeAttach() {
+    fAttach++;
+    document.getElementById('az-label').textContent = fAttach + ' file(s) selected';
+    document.getElementById('az-label').style.color = 'var(--green)';
+    toast('File attached');
+  }
+
+  function submitTask() {
+    if (!document.getElementById('f-name').value.trim()) { toast('Please enter a task name'); return; }
+    if (!selUser) { toast('Please select an employee'); return; }
+    toast('Task assigned. Notifications sent.');
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-desc').value = '';
+    fAttach = 0;
+    document.getElementById('az-label').textContent = 'PDF · Excel · Word · Images';
+    document.getElementById('az-label').style.color = '';
+    clearUser();
+    setTimeout(() => goBack(), 1200);
+  }
+
+  // Notifications
+  function markRead() {
+    document.querySelectorAll('.notif-item.unread').forEach(n => {
+      n.classList.remove('unread');
+      n.querySelector('.n-dot')?.remove();
+    });
+    document.getElementById('nbadge').style.display = 'none';
+    toast('All notifications marked as read');
+  }
+
+  // Upload sheet
+  let upReady = false;
+  const fakeFiles = ['Invoice_March.pdf','Budget_Working.xlsx','Audit_Notes.docx','Receipts_Q4.pdf'];
+  function openUpload() {
+    document.getElementById('ov-upload').classList.add('show');
+    document.getElementById('sh-upload').classList.add('show');
+  }
+  function closeUpload() {
+    document.getElementById('ov-upload').classList.remove('show');
+    document.getElementById('sh-upload').classList.remove('show');
+    document.getElementById('up-preview').style.display = 'none';
+    upReady = false;
+  }
+  function fakePick() {
+    const fn = fakeFiles[Math.floor(Math.random()*fakeFiles.length)];
+    document.getElementById('up-fname').textContent = fn;
+    document.getElementById('up-preview').style.display = 'flex';
+    upReady = true;
+  }
+  function confirmUpload() {
+    if (!upReady) { toast('Please select a file'); return; }
+    const fn = document.getElementById('up-fname').textContent;
+    tasks[curTask].docs.push({name:fn, by:'Arjun Mehta', size:'1.2 MB'});
+    renderDocs(tasks[curTask]);
+    closeUpload();
+    toast('Document uploaded');
+  }
+
+  // Profile sheet
+  function openProfile() {
+    document.getElementById('ov-profile').classList.add('show');
+    document.getElementById('sh-profile').classList.add('show');
+  }
+  function closeProfile() {
+    document.getElementById('ov-profile').classList.remove('show');
+    document.getElementById('sh-profile').classList.remove('show');
+  }
+
+  // Toast
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // Date default
+  document.getElementById('f-start').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
